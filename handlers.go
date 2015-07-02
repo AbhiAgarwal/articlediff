@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"net/http"
 	"log"
+	"net/http"
 
 	articlesModel "github.com/abhiagarwal/articlediff/models"
 
@@ -78,9 +78,9 @@ func (c *appContext) createarticleHandler(w http.ResponseWriter, r *http.Request
 	})
 
 	err = repo.Create(&body.Data)
-  if err != nil {
-    panic(err)
-  }
+	if err != nil {
+		panic(err)
+	}
 
 	w.Header().Set("Content-Type", "application/vnd.api+json")
 	w.WriteHeader(201)
