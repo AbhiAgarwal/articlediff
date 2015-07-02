@@ -1,6 +1,8 @@
 package models
 
 import (
+  "time"
+
   "gopkg.in/mgo.v2"
   "gopkg.in/mgo.v2/bson"
 )
@@ -10,6 +12,7 @@ type article struct {
   Title    string        `json:"title"`
   Article  string        `json:"article"`
   URL      string        `json:"url"`
+  Date     time.Time     `json:"date"`
 }
 
 type ArticlesCollection struct {

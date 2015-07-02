@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	articlesModel "github.com/abhiagarwal/articlediff/models"
 
@@ -46,7 +47,7 @@ func (c *appContext) articlesHandler(w http.ResponseWriter, r *http.Request) {
 	repo := articlesModel.ArticleRepo{c.db.C("articles")}
 	articles, err := repo.All()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	w.Header().Set("Content-Type", "application/vnd.api+json")
@@ -58,7 +59,7 @@ func (c *appContext) articleHandler(w http.ResponseWriter, r *http.Request) {
 	repo := articlesModel.ArticleRepo{c.db.C("articles")}
 	article, err := repo.Find(params.ByName("id"))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	w.Header().Set("Content-Type", "application/vnd.api+json")
@@ -72,14 +73,21 @@ func (c *appContext) createarticleHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	body.Data.Title = doc.Find("h1").Text()
 	doc.Find("p").Each(func(i int, s *goquery.Selection) {
-		body.Data.Article += (s.Text() + "\n")
+		html, err := s.Html()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		body.Data.Article += html
 	})
+	body.Data.Date = time.Now()
 
 	err = repo.Create(&body.Data)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	w.Header().Set("Content-Type", "application/vnd.api+json")
@@ -94,7 +102,7 @@ func (c *appContext) updatearticleHandler(w http.ResponseWriter, r *http.Request
 	repo := articlesModel.ArticleRepo{c.db.C("articles")}
 	err := repo.Update(&body.Data)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	w.WriteHeader(204)
@@ -106,7 +114,7 @@ func (c *appContext) deletearticleHandler(w http.ResponseWriter, r *http.Request
 	repo := articlesModel.ArticleRepo{c.db.C("articles")}
 	err := repo.Delete(params.ByName("id"))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	w.WriteHeader(204)
