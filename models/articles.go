@@ -9,6 +9,7 @@ type article struct {
   Id       bson.ObjectId `json:"id,omitempty" bson:"_id,omitempty"`
   Title    string        `json:"title"`
   Article  string        `json:"article"`
+  URL      string        `json:"url"`
 }
 
 type ArticlesCollection struct {

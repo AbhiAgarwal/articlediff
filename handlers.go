@@ -3,12 +3,11 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	// "log"
-	// "fmt"
+	"log"
 
 	articlesModel "github.com/abhiagarwal/articlediff/models"
 
-	// "github.com/PuerkitoBio/goquery"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 	"gopkg.in/mgo.v2"
@@ -32,38 +31,16 @@ func (c *appContext) register() {
 		HandlerName: "delete",
 		OneHandler:  c.deletearticleHandler,
 	}
+	createarticle := Actions{
+		HandlerName: "post",
+		OneHandler:  c.createarticleHandler,
+	}
 	updatearticle := Actions{
 		HandlerName: "put",
 		OneHandler:  c.updatearticleHandler,
 	}
-	RegisterAction("articles", listarticle, onearticle, updatearticle, deletearticle)
-
-	// scrapearticle := Actions{
-	// 	HandlerName: "post",
-	// 	OneHandler:  c.scrapeArticleHandler,
-	// }
-	// RegisterAction("article", scrapearticle)
+	RegisterAction("articles", listarticle, onearticle, createarticle, updatearticle, deletearticle)
 }
-
-// func (c *appContext) scrapeArticleHandler(w http.ResponseWriter, r *http.Request) {
-// 	params := context.Get(r, "params").(httprouter.Params)
-// 	var article articlesModel.ArticleResource
-// 	url := params.ByName("url")
-// 	if url != "" {
-// 		doc, err := goquery.NewDocument(url)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 		article.Data.Title = doc.Find("h1").Text()
-// 		doc.Find("p").Each(func(i int, s *goquery.Selection) {
-// 			article.Data.Article += (s.Text() + "\n")
-// 		})
-// 		fmt.Println(article.Data.Title)
-// 		return
-// 	} else {
-// 		return
-// 	}
-// }
 
 func (c *appContext) articlesHandler(w http.ResponseWriter, r *http.Request) {
 	repo := articlesModel.ArticleRepo{c.db.C("articles")}
@@ -91,10 +68,19 @@ func (c *appContext) articleHandler(w http.ResponseWriter, r *http.Request) {
 func (c *appContext) createarticleHandler(w http.ResponseWriter, r *http.Request) {
 	body := context.Get(r, "body").(*articlesModel.ArticleResource)
 	repo := articlesModel.ArticleRepo{c.db.C("articles")}
-	err := repo.Create(&body.Data)
+	doc, err := goquery.NewDocument(body.Data.URL)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
+	body.Data.Title = doc.Find("h1").Text()
+	doc.Find("p").Each(func(i int, s *goquery.Selection) {
+		body.Data.Article += (s.Text() + "\n")
+	})
+
+	err = repo.Create(&body.Data)
+  if err != nil {
+    panic(err)
+  }
 
 	w.Header().Set("Content-Type", "application/vnd.api+json")
 	w.WriteHeader(201)
